@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 
@@ -13,7 +12,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! Type 'hi', 'how are you', or 'bye' to get started.",
+      text: "Hello, good day to you",
       sender: 'bot',
       timestamp: new Date()
     }
