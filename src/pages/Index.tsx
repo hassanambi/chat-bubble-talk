@@ -12,7 +12,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello, good day to you",
+      text: "Hello! How can I help you today? Please choose from the following options:\n\n🔧 **Technical Support**\n(e.g., \"My website is down—can you fix it?\", \"How do I recover my data?\")\n\n🎯 **Service Requests & Ticketing**\n(e.g., \"I need cybersecurity consulting\", \"Schedule a network audit\")\n\n❓ **FAQ Automation**\n(e.g., \"What's your pricing?\", \"Do you offer 24/7 support?\")\n\n💼 **Pre-Sales**\n(e.g., \"What services do you offer?\", \"Can you help with cloud migration?\")",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -21,15 +21,36 @@ const Index = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Simple bot responses
+  // Enhanced bot responses for different service categories
   const botResponses: { [key: string]: string } = {
-    "hi": "Hello! How can I help you today?",
-    "hello": "Hi there! Nice to meet you!",
-    "how are you": "I'm a bot, so I'm always doing great! How are you?",
-    "bye": "Goodbye! Have a wonderful day!",
-    "goodbye": "See you later! Take care!",
-    "thanks": "You're welcome! Happy to help!",
-    "thank you": "My pleasure! Is there anything else I can help with?"
+    // Technical Support responses
+    "technical support": "I'm here to help with technical issues! Please describe your problem and I'll assist you with troubleshooting.",
+    "website down": "I understand your website is experiencing issues. Let me help you troubleshoot this problem step by step.",
+    "data recovery": "Data recovery is critical. I'll guide you through the recovery process and preventive measures.",
+    "fix it": "I'm ready to help fix your technical issue. Can you provide more details about what's not working?",
+    
+    // Service Requests & Ticketing
+    "service request": "I can help you with service requests. What specific service do you need assistance with?",
+    "cybersecurity": "Cybersecurity is essential for your business. I can connect you with our security experts for a consultation.",
+    "network audit": "A network audit is a great way to ensure your infrastructure is secure and optimized. Let me schedule this for you.",
+    "ticketing": "I'll help you create a service ticket. What issue would you like to report?",
+    
+    // FAQ Automation
+    "pricing": "Our pricing varies based on your specific needs. Would you like me to connect you with our sales team for a custom quote?",
+    "24/7 support": "Yes, we offer 24/7 support for critical issues. Our response time varies by service level agreement.",
+    "faq": "I'm here to answer your frequently asked questions. What would you like to know?",
+    
+    // Pre-Sales
+    "services": "We offer a comprehensive range of IT services including cloud solutions, cybersecurity, technical support, and consulting.",
+    "cloud migration": "Absolutely! We specialize in cloud migration services. I can connect you with our cloud experts to discuss your requirements.",
+    "pre-sales": "I'm here to help with any pre-sales questions. What would you like to know about our services?",
+    
+    // General responses
+    "hi": "Hello! Please let me know which service category I can help you with today.",
+    "hello": "Hi there! How can I assist you? Please choose from Technical Support, Service Requests, FAQ, or Pre-Sales.",
+    "help": "I'm here to help! Please specify which area you need assistance with: Technical Support, Service Requests, FAQ, or Pre-Sales.",
+    "bye": "Goodbye! Feel free to reach out anytime you need assistance with our services.",
+    "thank you": "You're welcome! Is there anything else I can help you with today?"
   };
 
   const scrollToBottom = () => {
@@ -42,7 +63,15 @@ const Index = () => {
 
   const getBotResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase().trim();
-    return botResponses[lowerMessage] || "I didn't understand that. Try saying 'hi', 'how are you', or 'bye'!";
+    
+    // Check for partial matches in the message
+    for (const [key, response] of Object.entries(botResponses)) {
+      if (lowerMessage.includes(key)) {
+        return response;
+      }
+    }
+    
+    return "I'd be happy to help! Please let me know if you need Technical Support, Service Requests & Ticketing, FAQ information, or Pre-Sales assistance.";
   };
 
   const sendMessage = async () => {
@@ -102,7 +131,7 @@ const Index = () => {
                     : 'bg-gray-200 text-gray-800 rounded-bl-md'
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.text}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-line">{message.text}</p>
               </div>
             </div>
           ))}
