@@ -1,11 +1,149 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState, useRef, useEffect } from 'react';
+import { Send } from 'lucide-react';
+
+interface Message {
+  id: number;
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+}
 
 const Index = () => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 1,
+      text: "Hello! Type 'hi', 'how are you', or 'bye' to get started.",
+      sender: 'bot',
+      timestamp: new Date()
+    }
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Simple bot responses
+  const botResponses: { [key: string]: string } = {
+    "hi": "Hello! How can I help you today?",
+    "hello": "Hi there! Nice to meet you!",
+    "how are you": "I'm a bot, so I'm always doing great! How are you?",
+    "bye": "Goodbye! Have a wonderful day!",
+    "goodbye": "See you later! Take care!",
+    "thanks": "You're welcome! Happy to help!",
+    "thank you": "My pleasure! Is there anything else I can help with?"
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const getBotResponse = (userMessage: string): string => {
+    const lowerMessage = userMessage.toLowerCase().trim();
+    return botResponses[lowerMessage] || "I didn't understand that. Try saying 'hi', 'how are you', or 'bye'!";
+  };
+
+  const sendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now(),
+      text: inputValue,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsTyping(true);
+
+    // Simulate bot thinking time
+    setTimeout(() => {
+      const botResponse: Message = {
+        id: Date.now() + 1,
+        text: getBotResponse(inputValue),
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, botResponse]);
+      setIsTyping(false);
+    }, 1000);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col h-[600px]">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
+          <h1 className="text-xl font-semibold text-center">Chat Bot</h1>
+          <p className="text-blue-100 text-sm text-center mt-1">Always here to help!</p>
+        </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`max-w-[80%] px-4 py-3 rounded-2xl transition-all duration-200 ${
+                  message.sender === 'user'
+                    ? 'bg-blue-600 text-white rounded-br-md'
+                    : 'bg-gray-200 text-gray-800 rounded-bl-md'
+                }`}
+              >
+                <p className="text-sm leading-relaxed">{message.text}</p>
+              </div>
+            </div>
+          ))}
+          
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-gray-200 text-gray-800 px-4 py-3 rounded-2xl rounded-bl-md">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="border-t border-gray-200 p-4">
+          <div className="flex space-x-3">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type your message..."
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              disabled={isTyping}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!inputValue.trim() || isTyping}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white p-3 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:transform-none"
+            >
+              <Send size={20} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
