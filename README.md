@@ -47,7 +47,7 @@ npm install
 
    ⚠️ **Important**: Never commit your real API key to version control. The `.env` file is already in `.gitignore`.
 
-   ⚠️ **Security Note**: This setup makes API calls from the browser. For production, move API calls to a backend server.
+   ✅ **Security**: API calls are now handled securely through the backend server.
 
 4. Start the development server
 ```bash
