@@ -1,53 +1,82 @@
-# Welcome to your Lovable project
+# IT Services Chat Bot with Claude AI
 
-## Project info
+A modern chat bot for IT services built with React, TypeScript, and powered by Anthropic's Claude AI.
 
-**URL**: https://lovable.dev/projects/bbb39b31-7399-41aa-b826-4dd20be8328a
+## Features
 
-## How can I edit this code?
+- 🤖 **Claude AI Integration** - Powered by Anthropic's Claude 3 Sonnet model
+- 💬 **Interactive Chat Interface** - Clean, professional UI with message history
+- 🔘 **Smart Button Responses** - Contextual quick-reply buttons
+- 📱 **Responsive Design** - Works on desktop and mobile
+- ⚡ **Real-time Responses** - Live typing indicators and smooth animations
 
-There are several ways of editing your application.
+## Setup
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bbb39b31-7399-41aa-b826-4dd20be8328a) and start prompting.
+- Node.js (v16 or higher)
+- npm or yarn
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+1. Clone the repository
+```bash
 git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Install dependencies
+```bash
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. **Set up Claude API Key**
+
+   a. Visit [Anthropic Console](https://console.anthropic.com/)
+
+   b. Sign up for an account (if you don't have one)
+
+   c. Navigate to API Keys section
+
+   d. Create a new API key
+
+   e. Copy the API key and update the `.env` file:
+   ```env
+   VITE_ANTHROPIC_API_KEY=sk-ant-api03-your-actual-key-here
+   ```
+
+   ⚠️ **Important**: Never commit your real API key to version control. The `.env` file is already in `.gitignore`.
+
+   ⚠️ **Security Note**: This setup makes API calls from the browser. For production, move API calls to a backend server.
+
+4. Start the development server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## API Configuration
 
-**Use GitHub Codespaces**
+The bot uses Claude 3 Sonnet with a specialized system prompt for IT services. It can handle:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
+- Technical support queries
+- Service requests
+- FAQ responses
+- Pre-sales consulting
+- General IT assistance
+
+## Security Note
+
+⚠️ **Production Deployment**: The current setup makes API calls directly from the browser. For production, consider moving API calls to a backend server to protect your API key.
+
+## Technologies Used
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS
+- **UI Components**: shadcn/ui, Radix UI
+- **AI**: Anthropic Claude API
+- **Build Tool**: Vite
+- **Icons**: Lucide React
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
 ## What technologies are used for this project?

@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
+import Anthropic from '@anthropic-ai/sdk';
 
 interface Message {
   id: number;
@@ -18,6 +19,46 @@ const IT_SERVICE_CATEGORIES = [
   "💼 Pre-Sales"
 ];
 
+const SYSTEM_PROMPT = `You are a helpful IT services chatbot for XYZ IT Services. You provide professional, knowledgeable assistance for:
+
+TECHNICAL SUPPORT:
+- Server/network troubleshooting
+- Software installation and configuration
+- System diagnostics
+- Emergency support
+- Hardware issues
+
+SERVICE REQUESTS:
+- Network security audits
+- Cloud migration (AWS/Azure)
+- System maintenance
+- Hardware upgrades
+- Backup solutions
+
+FAQ & GENERAL INFO:
+- Response times (1-4 hours standard)
+- SLA offerings
+- Global coverage
+- Pricing information
+- Team expertise
+
+PRE-SALES CONSULTING:
+- Cloud solutions assessment
+- Cybersecurity packages
+- Managed IT services
+- DevOps consulting
+- Technology recommendations
+
+Guidelines:
+- Be professional, helpful, and concise
+- Use bullet points for lists when appropriate
+- Offer specific next steps when relevant
+- If you don't know something, admit it and offer to connect to a specialist
+- Keep responses under 200 words unless detailed explanation is needed
+- Always maintain a friendly, customer-service oriented tone
+
+The company is ISO 27001 certified and offers 24/7 support.`;
+
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -33,60 +74,14 @@ const Index = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced knowledge base for IT services
-  const knowledgeBase: { [key: string]: { response: string; followup?: string[] } } = {
-    // Technical Support
-    "technical support": {
-      response: "I can help with various technical issues:\n\n• Server/network troubleshooting\n• Software installation\n• System diagnostics\n• Emergency support\n\nPlease describe your issue.",
-      followup: ["Server down", "Software issue", "Network problem", "Other"]
-    },
-    "server down": {
-      response: "For server issues:\n\n1. Check power and network connections\n2. Verify server status via dashboard\n3. Review recent logs\n\nWould you like to open a priority ticket?"
-    },
-    "software issue": {
-      response: "For software problems:\n\n• What software is affected?\n• Error message received?\n• When did it start occurring?\n\nWe can remote in to diagnose."
-    },
-
-    // Service Requests
-    "service requests": {
-      response: "Available services:\n\n• Network security audit\n• Cloud migration\n• System maintenance\n• Hardware upgrade\n\nWhich service do you need?",
-      followup: ["Schedule audit", "Cloud migration", "Maintenance", "Upgrade quote"]
-    },
-    "schedule audit": {
-      response: "Our security audits include:\n\n• Vulnerability assessment\n• Penetration testing\n• Compliance review\n\nI can connect you to our security team."
-    },
-
-    // FAQ
-    "faq": {
-      response: "Frequently asked questions:\n\n• What's your response time? (1-4 hours)\n• Do you offer SLAs? (Yes)\n• What regions do you cover? (Worldwide)\n\nWhat would you like to know?",
-      followup: ["Pricing", "Support hours", "Technologies", "Team expertise"]
-    },
-    "pricing": {
-      response: "Our pricing depends on:\n\n• Service level (Basic/Premium)\n• Systems covered\n• Response time\n\nWould you like a custom quote?"
-    },
-
-    // Pre-Sales
-    "pre-sales": {
-      response: "We specialize in:\n\n• Cloud solutions (AWS/Azure)\n• Cybersecurity\n• Managed IT services\n• DevOps consulting\n\nWhat are you interested in?",
-      followup: ["Cloud services", "Security packages", "Managed IT", "Consulting"]
-    },
-    "cloud services": {
-      response: "Our cloud offerings include:\n\n• Migration planning\n• Cost optimization\n• Architecture review\n• 24/7 monitoring\n\nLet me connect you to our cloud team."
-    },
-
-    // General
-    "hi": {
-      response: "Hello! How can I assist with your IT needs today?",
-      followup: IT_SERVICE_CATEGORIES
-    },
-    "help": {
-      response: "I can help with:",
-      followup: IT_SERVICE_CATEGORIES
-    },
-    "bye": {
-      response: "Thank you for contacting XYZ IT Services! Our team is available 24/7 if you need further assistance."
-    }
-  };
+  // Initialize Anthropic client
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+  const anthropic = apiKey && apiKey !== 'your-actual-anthropic-api-key-here'
+    ? new Anthropic({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true
+      })
+    : null;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -96,7 +91,70 @@ const Index = () => {
     scrollToBottom();
   }, [messages]);
 
-  const getBotResponse = (userMessage: string): Message => {
+  const getBotResponse = async (userMessage: string): Promise<Message> => {
+    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    console.log('API Key configured:', !!apiKey, 'Key starts with:', apiKey?.substring(0, 20) + '...');
+
+    // Check if API is configured
+    if (!anthropic) {
+      console.log('No anthropic client - using demo mode');
+      return {
+        id: Date.now() + 1,
+        text: "🤖 Claude AI integration is not configured yet.\n\nTo enable AI-powered responses:\n\n1. Get an API key from https://console.anthropic.com/\n2. Update the VITE_ANTHROPIC_API_KEY in your .env file\n3. Refresh the page\n\nFor now, I'm operating in demo mode with basic responses.",
+        sender: 'bot',
+        timestamp: new Date(),
+        isButton: true,
+        buttons: IT_SERVICE_CATEGORIES
+      };
+    }
+
+    try {
+      console.log('Making Claude API call...');
+      const response = await anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [
+          {
+            role: 'user',
+            content: userMessage
+          }
+        ]
+      });
+
+      console.log('Claude API response received');
+      const botResponse: Message = {
+        id: Date.now() + 1,
+        text: response.content[0].type === 'text' ? response.content[0].text : 'I apologize, but I encountered an error processing your request.',
+        sender: 'bot',
+        timestamp: new Date()
+      };
+
+      // Add contextual buttons for certain topics
+      const lowerMessage = userMessage.toLowerCase();
+      if (lowerMessage.includes('technical') || lowerMessage.includes('support')) {
+        botResponse.isButton = true;
+        botResponse.buttons = ["Server down", "Software issue", "Network problem", "Hardware issue"];
+      } else if (lowerMessage.includes('service') || lowerMessage.includes('request')) {
+        botResponse.isButton = true;
+        botResponse.buttons = ["Schedule audit", "Cloud migration", "Maintenance", "Upgrade quote"];
+      } else if (lowerMessage.includes('faq') || lowerMessage.includes('question')) {
+        botResponse.isButton = true;
+        botResponse.buttons = ["Pricing", "Support hours", "Technologies", "Team expertise"];
+      } else if (lowerMessage.includes('pre-sales') || lowerMessage.includes('sales')) {
+        botResponse.isButton = true;
+        botResponse.buttons = ["Cloud services", "Security packages", "Managed IT", "Consulting"];
+      }
+
+      return botResponse;
+    } catch (error) {
+      console.error('Claude API error:', error);
+      // Fallback to basic responses when API fails
+      return getFallbackResponse(userMessage);
+    }
+  };
+
+  const getFallbackResponse = (userMessage: string): Message => {
     const lowerMessage = userMessage.toLowerCase();
     let response: Message = {
       id: Date.now() + 1,
@@ -105,26 +163,27 @@ const Index = () => {
       timestamp: new Date()
     };
 
-    // Check for direct matches first
-    for (const [key, data] of Object.entries(knowledgeBase)) {
-      if (lowerMessage.includes(key)) {
-        response.text = data.response;
-        if (data.followup) {
-          response.isButton = true;
-          response.buttons = data.followup;
-        }
-        return response;
-      }
+    // Basic fallback responses
+    if (lowerMessage.includes('technical') || lowerMessage.includes('support')) {
+      response.text = "I can help with various technical issues including server troubleshooting, software installation, and system diagnostics. What specific issue are you experiencing?";
+      response.isButton = true;
+      response.buttons = ["Server down", "Software issue", "Network problem"];
+    } else if (lowerMessage.includes('service') || lowerMessage.includes('request')) {
+      response.text = "We offer network security audits, cloud migration, system maintenance, and hardware upgrades. Which service interests you?";
+      response.isButton = true;
+      response.buttons = ["Security audit", "Cloud migration", "Maintenance"];
+    } else if (lowerMessage.includes('faq') || lowerMessage.includes('pricing')) {
+      response.text = "Our response time is typically 1-4 hours. We offer SLA options and serve clients worldwide. Would you like a custom quote?";
+    } else {
+      response.text = "I'm here to help with your IT service needs. How can I assist you today?";
+      response.isButton = true;
+      response.buttons = IT_SERVICE_CATEGORIES;
     }
 
-    // Fallback response
-    response.text = "I specialize in IT services. Please choose an option:";
-    response.isButton = true;
-    response.buttons = IT_SERVICE_CATEGORIES;
     return response;
   };
 
-  const sendMessage = (text: string, isButtonClick = false) => {
+  const sendMessage = async (text: string, isButtonClick = false) => {
     if (!text.trim()) return;
 
     const userMessage: Message = {
@@ -138,11 +197,21 @@ const Index = () => {
     if (!isButtonClick) setInputValue('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const botResponse = getBotResponse(text);
+    try {
+      const botResponse = await getBotResponse(text);
       setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Error getting bot response:', error);
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        text: "I apologize, but I'm experiencing technical difficulties. Please try again in a moment.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000); // Random delay for natural feel
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -160,12 +229,22 @@ const Index = () => {
             <div className="p-2 bg-blue-600 rounded-full">
               <Bot size={20} />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-lg font-semibold">XYZ IT Services</h1>
               <p className="text-blue-100 text-xs">
-                {isTyping ? 'Typing...' : 'Online'}
+                {isTyping ? 'Typing...' : anthropic ? 'AI Powered' : 'Demo Mode'}
               </p>
             </div>
+            <button
+              onClick={() => {
+                const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+                alert(`API Status:\n- Key configured: ${!!apiKey}\n- Client initialized: ${!!anthropic}\n- Key preview: ${apiKey?.substring(0, 20)}...\n\nCheck browser console for detailed logs.`);
+              }}
+              className="text-blue-200 hover:text-white text-xs underline"
+              title="Check API status"
+            >
+              Debug
+            </button>
           </div>
         </div>
 
