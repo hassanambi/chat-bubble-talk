@@ -31,6 +31,7 @@ const Index = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -50,7 +51,10 @@ const Index = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({
+          message: userMessage,
+          conversationId: conversationId
+        }),
       });
 
       if (!response.ok) {
@@ -59,6 +63,11 @@ const Index = () => {
       }
 
       const data = await response.json();
+
+      // Update conversation ID if it's the first message
+      if (!conversationId && data.conversationId) {
+        setConversationId(data.conversationId);
+      }
 
       const botResponse: Message = {
         id: Date.now() + 1,
@@ -172,109 +181,34 @@ const Index = () => {
                 {isTyping ? 'Typing...' : 'AI Powered'}
               </p>
             </div>
-            <button
-              onClick={() => {
-                alert(`Backend API Status:\n- Frontend connected to http://localhost:3001\n- Check browser console for API call logs\n- Backend must be running for AI responses`);
-              }}
-              className="text-blue-200 hover:text-white text-xs underline"
-              title="Check API status"
-            >
-              Debug
-            </button>
-          </div>
-        </div>
-
-  const getFallbackResponse = (userMessage: string): Message => {
-    const lowerMessage = userMessage.toLowerCase();
-    let response: Message = {
-      id: Date.now() + 1,
-      text: "",
-      sender: 'bot',
-      timestamp: new Date()
-    };
-
-    // Basic fallback responses
-    if (lowerMessage.includes('technical') || lowerMessage.includes('support')) {
-      response.text = "I can help with various technical issues including server troubleshooting, software installation, and system diagnostics. What specific issue are you experiencing?";
-      response.isButton = true;
-      response.buttons = ["Server down", "Software issue", "Network problem"];
-    } else if (lowerMessage.includes('service') || lowerMessage.includes('request')) {
-      response.text = "We offer network security audits, cloud migration, system maintenance, and hardware upgrades. Which service interests you?";
-      response.isButton = true;
-      response.buttons = ["Security audit", "Cloud migration", "Maintenance"];
-    } else if (lowerMessage.includes('faq') || lowerMessage.includes('pricing')) {
-      response.text = "Our response time is typically 1-4 hours. We offer SLA options and serve clients worldwide. Would you like a custom quote?";
-    } else {
-      response.text = "I'm here to help with your IT service needs. How can I assist you today?";
-      response.isButton = true;
-      response.buttons = IT_SERVICE_CATEGORIES;
-    }
-
-    return response;
-  };
-
-  const sendMessage = async (text: string, isButtonClick = false) => {
-    if (!text.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now(),
-      text: isButtonClick ? text.replace(/[🔧🎯❓💼]/g, '').trim() : text,
-      sender: 'user',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    if (!isButtonClick) setInputValue('');
-    setIsTyping(true);
-
-    try {
-      const botResponse = await getBotResponse(text);
-      setMessages(prev => [...prev, botResponse]);
-    } catch (error) {
-      console.error('Error getting bot response:', error);
-      const errorMessage: Message = {
-        id: Date.now() + 1,
-        text: "I apologize, but I'm experiencing technical difficulties. Please try again in a moment.",
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isTyping) {
-      sendMessage(inputValue);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-[600px]">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-700 to-blue-800 p-4 text-white">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="p-2 bg-blue-600 rounded-full">
-              <Bot size={20} />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setConversationId(null);
+                  setMessages([{
+                    id: Date.now(),
+                    text: "Hello! I've started a new conversation. How can I help you today?",
+                    sender: 'bot',
+                    timestamp: new Date(),
+                    isButton: true,
+                    buttons: IT_SERVICE_CATEGORIES
+                  }]);
+                }}
+                className="text-blue-200 hover:text-white text-xs underline"
+                title="Start new conversation"
+              >
+                New Chat
+              </button>
+              <button
+                onClick={() => {
+                  alert(`Backend API Status:\n- Frontend connected to http://localhost:3001\n- Conversation ID: ${conversationId || 'None'}\n- Check browser console for API call logs`);
+                }}
+                className="text-blue-200 hover:text-white text-xs underline"
+                title="Check API status"
+              >
+                Debug
+              </button>
             </div>
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold">XYZ IT Services</h1>
-              <p className="text-blue-100 text-xs">
-                {isTyping ? 'Typing...' : anthropic ? 'AI Powered' : 'Demo Mode'}
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-                alert(`API Status:\n- Key configured: ${!!apiKey}\n- Client initialized: ${!!anthropic}\n- Key preview: ${apiKey?.substring(0, 20)}...\n\nCheck browser console for detailed logs.`);
-              }}
-              className="text-blue-200 hover:text-white text-xs underline"
-              title="Check API status"
-            >
-              Debug
-            </button>
           </div>
         </div>
 
