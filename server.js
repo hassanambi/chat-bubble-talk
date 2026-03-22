@@ -33,6 +33,13 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Log the loaded API key (masked) for verification
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY || '';
+const anthropicApiKeyMasked = anthropicApiKey
+  ? `${anthropicApiKey.slice(0, 6)}...${anthropicApiKey.slice(-6)}`
+  : 'none';
+console.log(`🔐 Anthropic API key loaded: ${anthropicApiKeyMasked}`);
+
 // Enhanced system prompt for IT services with detailed expertise
 const SYSTEM_PROMPT = `You are an expert IT services chatbot for XYZ IT Services, a premium technology solutions provider. You possess deep technical knowledge and provide intelligent, context-aware assistance.
 
